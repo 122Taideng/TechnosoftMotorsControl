@@ -184,6 +184,19 @@ namespace TechnsoftMotorsControl
                 return false;
             return true;
         }
+        public bool MoveAbs(char axis, int position)
+        {
+            if (!MoveAbsAsync(axis, position))
+                return false;
+            if (!WaitForMotionComplete(axis))
+                return false;
+            return true;
+        }
+        public bool MoveAbs(char axis, double position)
+        {
+            int int_position = (int)Math.Round((double)position);
+            return MoveAbs(axis, int_position);
+        }
         public bool MoveRelAsync(char axis, int position)
         {
             byte axis_id = CharToId(axis);
@@ -201,6 +214,19 @@ namespace TechnsoftMotorsControl
             if (!MoveRelAsync(axis, int_position))
                 return false;
             return true;
+        }
+        public bool MoveRel(char axis, int position)
+        {
+            if (!MoveRelAsync(axis, position))
+                return false;
+            if (!WaitForMotionComplete(axis))
+                return false;
+            return true;
+        }
+        public bool MoveRel(char axis, double position)
+        {
+            int int_position = (int)Math.Round((double)position);
+            return MoveRel(axis, int_position);
         }
         private int MicronToRotation(int micron)
         {
