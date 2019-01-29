@@ -177,6 +177,13 @@ namespace TechnsoftMotorsControl
                 return false;
             return true;
         }
+        public bool MoveAbsAsync(char axis, double position)
+        {
+            int int_position = (int)Math.Round((double)position);
+            if (!MoveAbsAsync(axis, int_position))
+                return false;
+            return true;
+        }
         public bool MoveRelAsync(char axis, int position)
         {
             byte axis_id = CharToId(axis);
@@ -184,6 +191,14 @@ namespace TechnsoftMotorsControl
             if (!TMLLib.TS_SelectAxis(axis_id))
                 return false;
             if (!TMLLib.TS_MoveRelative(rot, speed, acceleration, NO_ADDITIVE, TMLLib.UPDATE_IMMEDIATE, TMLLib.FROM_REFERENCE))
+                return false;
+            return true;
+        }
+
+        public bool MoveRelAsync(char axis, double position)
+        {
+            int int_position = (int)Math.Round((double)position);
+            if (!MoveRelAsync(axis, int_position))
                 return false;
             return true;
         }
