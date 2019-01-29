@@ -195,5 +195,15 @@ namespace TechnsoftMotorsControl
         {
             return (int)Math.Round(rotation * micron_to_rot);
         }
+
+        public bool WaitForMotionComplete(char axis)
+        {
+            byte axis_id = CharToId(axis);
+            if (!TMLLib.TS_SelectAxis(axis_id))
+                return false;
+            if (!TMLLib.TS_SetEventOnMotionComplete(WAIT_EVENT, NO_STOP))
+                return false;
+            return true;
+        }
     }
 }
