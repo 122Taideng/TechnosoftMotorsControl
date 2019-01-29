@@ -205,5 +205,15 @@ namespace TechnsoftMotorsControl
                 return false;
             return true;
         }
+        public bool WaitForMotionComplete()
+        {
+            if (!WaitForMotionComplete(X))
+                return false;
+            if (!WaitForMotionComplete(Y))
+                return false;
+            if (!WaitForMotionComplete(Z))
+                return false;
+            return true;
+        }
     }
 }
