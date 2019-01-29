@@ -10,6 +10,13 @@ namespace TechnsoftMotorsControl
         private const byte CHANNEL_TYPE = TMLLib.CHANNEL_RS232;
 
         private byte host_id = 3;
+        public MotorsControl()
+        {
+            if (!InitCommunicationChannel())
+            {
+                return;
+            }
+        }
 
         public bool InitCommunicationChannel()
         {
