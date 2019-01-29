@@ -139,5 +139,14 @@ namespace TechnsoftMotorsControl
                 return false;
             return true;
         }
+
+        public bool HomeAxes()
+        {
+            if (!HomeAxis(z_id) || !HomeAxis(y_id) || !HomeAxis(x_id))
+            {
+                return false;
+            }
+            return true;
+        }
     }
 }
