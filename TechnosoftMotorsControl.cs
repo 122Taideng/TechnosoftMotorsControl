@@ -5,8 +5,8 @@ namespace TechnsoftMotorsControl
 {
     public class MotorsControl
     {
-        private double speed = 10;
-        private double acceleration = 0.3;
+        private double speed;
+        private double acceleration;
 
         const double micron_to_rot = 1.46484375;
 
@@ -30,8 +30,11 @@ namespace TechnsoftMotorsControl
         const char X = 'X';
         const char Y = 'Y';
         const char Z = 'Z';
+
         public MotorsControl()
         {
+            speed = 10;
+            acceleration = 0.3;
             if (!InitCommunicationChannel())
             {
                 return;
@@ -255,6 +258,14 @@ namespace TechnsoftMotorsControl
             if (!WaitForMotionComplete(Z))
                 return false;
             return true;
+        }
+        public void SetSpeed(double _speed)
+        {
+            speed = _speed;
+        }
+        public void SetAcceleration(double _acceleration)
+        {
+            acceleration = _acceleration;
         }
     }
 }
