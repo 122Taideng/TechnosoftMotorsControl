@@ -5,6 +5,11 @@ namespace TechnsoftMotorsControl
 {
     public class MotorsControl
     {
+        private double speed = 10;
+        private double acceleration = 0.3;
+
+        const double micron_to_rot = 1.46484375;
+
         private const string CHANNEL_NAME = "COM8";
         private const uint BAUDRATE = 115200;
         private const byte CHANNEL_TYPE = TMLLib.CHANNEL_RS232;
@@ -161,6 +166,34 @@ namespace TechnsoftMotorsControl
                     return z_id;
             }
             return 0;
+        }
+        public bool MoveAbsAsync(char axis, int position)
+        {
+            byte axis_id = CharToId(axis);
+            int rot = MicronToRotation(position);
+            if (!TMLLib.TS_SelectAxis(axis_id))
+                return false;
+            if (!TMLLib.TS_MoveAbsolute(rot, speed, acceleration, TMLLib.UPDATE_IMMEDIATE, TMLLib.FROM_REFERENCE))
+                return false;
+            return true;
+        }
+        public bool MoveRelAsync(char axis, int position)
+        {
+            byte axis_id = CharToId(axis);
+            int rot = MicronToRotation(position);
+            if (!TMLLib.TS_SelectAxis(axis_id))
+                return false;
+            if (!TMLLib.TS_MoveRelative(rot, speed, acceleration, NO_ADDITIVE, TMLLib.UPDATE_IMMEDIATE, TMLLib.FROM_REFERENCE))
+                return false;
+            return true;
+        }
+        private int MicronToRotation(int micron)
+        {
+            return (int)Math.Round(micron / micron_to_rot);
+        }
+        private int RotationToMicron(int rotation)
+        {
+            return (int)Math.Round(rotation * micron_to_rot);
         }
     }
 }
