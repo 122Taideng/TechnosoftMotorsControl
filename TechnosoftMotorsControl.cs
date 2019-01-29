@@ -9,6 +9,9 @@ namespace TechnsoftMotorsControl
         private const uint BAUDRATE = 115200;
         private const byte CHANNEL_TYPE = TMLLib.CHANNEL_RS232;
 
+        public const bool NO_STOP = false;
+        public const bool NO_ADDITIVE = false;
+        public const bool WAIT_EVENT = true;
 
         private byte x_id = 1;
         private string x_file = @"C:\MOTORS_TML\X1.t.zip";
@@ -109,6 +112,32 @@ namespace TechnsoftMotorsControl
             if (!TMLLib.TS_DriveInitialisation())
                 return -1;
             return idxSetup;
+        }
+
+        private bool HomeAxis(byte axis_id)
+        {
+            Int32 position = -100000000;
+            Int32 home_position = 0;
+            Int32 back_step = 1000;
+            double high_speed = 20;
+            double low_speed = 1.0;
+            double acceleration = 0.6;
+
+            if (!TMLLib.TS_SelectAxis(axis_id))
+                return false;
+            if (!TMLLib.TS_MoveRelative(position, high_speed, acceleration, NO_ADDITIVE, TMLLib.UPDATE_IMMEDIATE, TMLLib.FROM_REFERENCE))
+                return false;
+            if (!TMLLib.TS_SetEventOnLimitSwitch(TMLLib.LSW_NEGATIVE, TMLLib.TRANSITION_LOW_TO_HIGH, WAIT_EVENT, NO_STOP))
+                return false;
+            if (!TMLLib.TS_SetEventOnMotionComplete(WAIT_EVENT, NO_STOP))
+                return false;
+            if (!TMLLib.TS_MoveRelative(back_step, low_speed, acceleration, NO_ADDITIVE, TMLLib.UPDATE_IMMEDIATE, TMLLib.FROM_REFERENCE))
+                return false;
+            if (!TMLLib.TS_SetEventOnMotionComplete(WAIT_EVENT, NO_STOP))
+                return false;
+            if (!TMLLib.TS_SetPosition(home_position))
+                return false;
+            return true;
         }
     }
 }
