@@ -148,5 +148,19 @@ namespace TechnsoftMotorsControl
             }
             return true;
         }
+
+        private byte CharToId(char axis)
+        {
+            switch (axis)
+            {
+                case X:
+                    return x_id;
+                case Y:
+                    return y_id;
+                case Z:
+                    return z_id;
+            }
+            return 0;
+        }
     }
 }
