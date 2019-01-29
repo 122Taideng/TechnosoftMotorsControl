@@ -267,5 +267,17 @@ namespace TechnsoftMotorsControl
         {
             acceleration = _acceleration;
         }
+        public double GetPosition(char axis)
+        {
+            Int32 position = 0;
+            byte axis_id = CharToId(axis);
+            if (!TMLLib.TS_SelectAxis(axis_id))
+                return -1;
+            if (!TMLLib.TS_GetLongVariable("APOS", out position))
+            {
+                return -1;
+            }
+            return RotationToMicron(position);
+        }
     }
 }
