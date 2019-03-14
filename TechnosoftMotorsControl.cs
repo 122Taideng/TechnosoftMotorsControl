@@ -19,12 +19,15 @@ namespace TechnsoftMotorsControl
         private byte x_id = 1;
         private string x_file = @"C:\MOTORS_TML\X1.t.zip";
         private double x_micron_to_rot = 1.4648;
+        private int x_limit = 400000;
         private byte y_id = 2;
         private string y_file = @"C:\MOTORS_TML\Y2.t.zip";
         private double y_micron_to_rot = 1.4648;
+        private int y_limit = 400000;
         private byte z_id = 3;
         private string z_file = @"C:\MOTORS_TML\Z3.t.zip";
         private double z_micron_to_rot = 2.4446;
+        private int z_limit = 29000;
 
         private byte host_id = 3;
 
@@ -173,6 +176,8 @@ namespace TechnsoftMotorsControl
         }
         public bool MoveAbsAsync(char axis, int position)
         {
+            if (position > GetLimit(axis) || position < 0)
+                return false;
             byte axis_id = CharToId(axis);
             int rot = MicronToRotation(axis, position);
             if (!TMLLib.TS_SelectAxis(axis_id))
@@ -203,6 +208,9 @@ namespace TechnsoftMotorsControl
         }
         public bool MoveRelAsync(char axis, int position)
         {
+            int final_pos = GetPosition(Z) + position;
+            if (final_pos > GetLimit(axis) || final_pos < 0)
+                return false;
             byte axis_id = CharToId(axis);
             int rot = MicronToRotation(axis, position);
             if (!TMLLib.TS_SelectAxis(axis_id))
@@ -279,6 +287,18 @@ namespace TechnsoftMotorsControl
         public void SetAcceleration(double _acceleration)
         {
             acceleration = _acceleration;
+        }
+        private double GetLimit(char axis) {
+            switch (axis)
+            {
+                case X:
+                    return x_limit;
+                case Y:
+                    return y_limit;
+                case Z:
+                    return z_limit;
+            }
+            return -1;
         }
         public double GetPosition(char axis)
         {
