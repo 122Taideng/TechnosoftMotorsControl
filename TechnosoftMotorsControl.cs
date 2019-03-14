@@ -1,4 +1,5 @@
 ﻿using System;
+using Shared;
 using TML;
 
 namespace TechnsoftMotorsControl
@@ -173,6 +174,14 @@ namespace TechnsoftMotorsControl
                     return z_id;
             }
             return 0;
+        }
+        public Point3D GetSystemPosition()
+        {
+            Point3D pos;
+            pos.x = GetPosition('X');
+            pos.y = GetPosition('Y');
+            pos.z = GetPosition('Z');
+            return pos;
         }
         public bool MoveAbsAsync(char axis, int position)
         {
