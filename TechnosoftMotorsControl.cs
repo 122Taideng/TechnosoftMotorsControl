@@ -8,8 +8,6 @@ namespace TechnsoftMotorsControl
         private double speed;
         private double acceleration;
 
-        const double micron_to_rot = 1.46484375;
-
         private const string CHANNEL_NAME = "COM8";
         private const uint BAUDRATE = 115200;
         private const byte CHANNEL_TYPE = TMLLib.CHANNEL_RS232;
@@ -20,10 +18,13 @@ namespace TechnsoftMotorsControl
 
         private byte x_id = 1;
         private string x_file = @"C:\MOTORS_TML\X1.t.zip";
+        private double x_micron_to_rot = 1.4648;
         private byte y_id = 2;
         private string y_file = @"C:\MOTORS_TML\Y2.t.zip";
+        private double y_micron_to_rot = 1.4648;
         private byte z_id = 3;
         private string z_file = @"C:\MOTORS_TML\Z3.t.zip";
+        private double z_micron_to_rot = 2.4446;
 
         private byte host_id = 3;
 
@@ -173,7 +174,7 @@ namespace TechnsoftMotorsControl
         public bool MoveAbsAsync(char axis, int position)
         {
             byte axis_id = CharToId(axis);
-            int rot = MicronToRotation(position);
+            int rot = MicronToRotation(axis, position);
             if (!TMLLib.TS_SelectAxis(axis_id))
                 return false;
             if (!TMLLib.TS_MoveAbsolute(rot, speed, acceleration, TMLLib.UPDATE_IMMEDIATE, TMLLib.FROM_REFERENCE))
@@ -203,7 +204,7 @@ namespace TechnsoftMotorsControl
         public bool MoveRelAsync(char axis, int position)
         {
             byte axis_id = CharToId(axis);
-            int rot = MicronToRotation(position);
+            int rot = MicronToRotation(axis, position);
             if (!TMLLib.TS_SelectAxis(axis_id))
                 return false;
             if (!TMLLib.TS_MoveRelative(rot, speed, acceleration, NO_ADDITIVE, TMLLib.UPDATE_IMMEDIATE, TMLLib.FROM_REFERENCE))
@@ -231,13 +232,25 @@ namespace TechnsoftMotorsControl
             int int_position = (int)Math.Round((double)position);
             return MoveRel(axis, int_position);
         }
-        private int MicronToRotation(int micron)
-        {
-            return (int)Math.Round(micron / micron_to_rot);
+        private double AxisMicronToRot(char axis) {
+            switch (axis)
+            {
+                case X:
+                    return x_micron_to_rot;
+                case Y:
+                    return y_micron_to_rot;
+                case Z:
+                    return z_micron_to_rot;
+            }
+            return -1;
         }
-        private int RotationToMicron(int rotation)
+        private int MicronToRotation(char axis, int micron)
         {
-            return (int)Math.Round(rotation * micron_to_rot);
+            return (int)Math.Round(micron / AxisMicronToRot(axis));
+        }
+        private int RotationToMicron(char axis, int rotation)
+        {
+            return (int)Math.Round(rotation * AxisMicronToRot(axis));
         }
 
         public bool WaitForMotionComplete(char axis)
@@ -277,7 +290,7 @@ namespace TechnsoftMotorsControl
             {
                 return -1;
             }
-            return RotationToMicron(position);
+            return RotationToMicron(axis, position);
         }
     }
 }
