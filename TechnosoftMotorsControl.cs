@@ -20,15 +20,15 @@ namespace TechnsoftMotorsControl
     private byte x_id = 1;
     private string x_file = @"C:\MOTORS_TML\X1.t.zip";
     private double x_micron_to_rot = 1.4648;
-    private int x_limit = 400000;
+    private int x_limit = 500000;
     private byte y_id = 2;
     private string y_file = @"C:\MOTORS_TML\Y2.t.zip";
     private double y_micron_to_rot = 1.4648;
-    private int y_limit = 400000;
+    private int y_limit = 600000;
     private byte z_id = 3;
     private string z_file = @"C:\MOTORS_TML\Z3.t.zip";
     private double z_micron_to_rot = 2.4446;
-    private int z_limit = 29000;
+    private int z_limit = 50000;
 
     private byte host_id = 3;
 
