@@ -339,5 +339,24 @@ namespace TechnsoftMotorsControl
       }
       return RotationToMicron(axis, position);
     }
+
+    public bool StopMotion(char axis)
+    {
+      byte axis_id = CharToId(axis);
+      if (!TMLLib.TS_SelectAxis(axis_id))
+        return -1;
+      return TMLLib.TS_Stop();
+    }
+
+    public bool StopMotion()
+    {
+      if (!StopMotion(X))
+        return false;
+      if (!StopMotion(Y))
+        return false;
+      if (!StopMotion(Z))
+        return false;
+      return true;
+    }
   }
 }
