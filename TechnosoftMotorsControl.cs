@@ -13,6 +13,7 @@ namespace TechnsoftMotorsControl
             public double micron_to_rot;
             public int limit;
         };
+        private static Mutex mutex = new Mutex();
 
         public IDictionary<char, Motor> motors;
 
@@ -45,6 +46,7 @@ namespace TechnsoftMotorsControl
             {
                 return false;
             }
+            mutex.WaitOne();
             if (!InitCommunicationChannel())
             {
                 return false;
@@ -54,6 +56,7 @@ namespace TechnsoftMotorsControl
                 return false;
             }
             return true;
+            mutex.ReleaseMutex();
         }
 
 
@@ -166,6 +169,7 @@ namespace TechnsoftMotorsControl
 
         public bool HomeAxes()
         {
+            mutex.WaitOne();
             if (!SelectChannel()) return -1;
             foreach (var motor in motors.Values)
             {
@@ -174,6 +178,7 @@ namespace TechnsoftMotorsControl
                     return motor.id;
                 }
             }
+            mutex.ReleaseMutex();
             return 0;
         }
 
@@ -191,10 +196,12 @@ namespace TechnsoftMotorsControl
         {
             if (position > motors[axis].limit || position < 0) return false;
             int rot = MicronToRotation(axis, position);
+            mutex.WaitOne();
             if (!SelectChannel()) return false;
             if (!TMLLib.TS_SelectAxis(motors[axis].id)) return false;
             if (!TMLLib.TS_MoveAbsolute(rot, speed, acceleration, TMLLib.UPDATE_IMMEDIATE, TMLLib.FROM_REFERENCE)) return false;
             return true;
+            mutex.ReleaseMutex();
         }
 
         public bool MoveAbsAsync(char axis, double position)
@@ -222,12 +229,14 @@ namespace TechnsoftMotorsControl
 
         public bool MoveRelAsync(char axis, int position)
         {
+            mutex.WaitOne();
             double final_pos = GetPosition(axis) + (double)position;
             if (final_pos > motors[axis].limit || final_pos < 0) return false;
             int rot = MicronToRotation(axis, position);
             if (!SelectChannel()) return false;
             if (!TMLLib.TS_SelectAxis(motors[axis].id)) return false;
             if (!TMLLib.TS_MoveRelative(rot, speed, acceleration, NO_ADDITIVE, TMLLib.UPDATE_IMMEDIATE, TMLLib.FROM_REFERENCE)) return false;
+            mutex.ReleaseMutex();
             return true;
         }
 
@@ -283,11 +292,13 @@ namespace TechnsoftMotorsControl
 
         public bool WaitForMotionComplete()
         {
+            mutex.WaitOne();
             foreach (var motor in motors.Keys)
             {
                 if (!WaitForMotionComplete(motor)) return false;
             }
             return true;
+            mutex.ReleaseMutex();
         }
 
         public void SetSpeed(double _speed)
@@ -316,6 +327,7 @@ namespace TechnsoftMotorsControl
 
         public double GetPosition(char axis)
         {
+            mutex.WaitOne();
             Int32 position = 0;
             if (!SelectChannel()) return -1;
             if (!TMLLib.TS_SelectAxis(motors[axis].id)) return -1;
@@ -323,14 +335,17 @@ namespace TechnsoftMotorsControl
             {
                 return -1;
             }
+            mutex.ReleaseMutex();
             return RotationToMicron(axis, position);
         }
 
         public bool StopMotion(char axis)
         {
+            mutex.WaitOne();
             if (!SelectChannel()) return false;
             if (!TMLLib.TS_SelectAxis(motors[axis].id)) return false;
-             bool res = TMLLib.TS_Stop();
+            bool res = TMLLib.TS_Stop();
+            mutex.ReleaseMutex();
             return res;
         }
 
