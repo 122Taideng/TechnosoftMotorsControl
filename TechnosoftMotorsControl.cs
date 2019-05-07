@@ -30,10 +30,6 @@ namespace TechnsoftMotorsControl
         public const bool NO_ADDITIVE = false;
         public const bool WAIT_EVENT = true;
 
-        const char X = 'X';
-        const char Y = 'Y';
-        const char Z = 'Z';
-
         public MotorsControl()
         {
           motors = new Dictionary<char, Motor>();
