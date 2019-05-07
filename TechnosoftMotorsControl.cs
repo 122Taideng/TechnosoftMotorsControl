@@ -58,6 +58,11 @@ namespace TechnsoftMotorsControl
             return (channel_id < 0) ? false : true;
         }
 
+        private bool SelectChannel()
+        {
+            return TMLLib.TS_SelectChannel(channel_id);
+        }
+
         public bool InitAxes()
         {
             UInt16 sAxiOn_flag_01 = 0;
@@ -158,6 +163,8 @@ namespace TechnsoftMotorsControl
 
         public bool HomeAxes()
         {
+            if (!SelectChannel())
+                return false;
             if (!HomeAxis(z_id) || !HomeAxis(y_id) || !HomeAxis(x_id))
             {
                 return false;
@@ -194,6 +201,8 @@ namespace TechnsoftMotorsControl
                 return false;
             byte axis_id = CharToId(axis);
             int rot = MicronToRotation(axis, position);
+            if (!SelectChannel())
+                return false;
             if (!TMLLib.TS_SelectAxis(axis_id))
                 return false;
             if (!TMLLib.TS_MoveAbsolute(rot, speed, acceleration, TMLLib.UPDATE_IMMEDIATE, TMLLib.FROM_REFERENCE))
@@ -231,6 +240,8 @@ namespace TechnsoftMotorsControl
                 return false;
             byte axis_id = CharToId(axis);
             int rot = MicronToRotation(axis, position);
+            if (!SelectChannel())
+                return false;
             if (!TMLLib.TS_SelectAxis(axis_id))
                 return false;
             if (!TMLLib.TS_MoveRelative(rot, speed, acceleration, NO_ADDITIVE, TMLLib.UPDATE_IMMEDIATE, TMLLib.FROM_REFERENCE))
@@ -288,6 +299,8 @@ namespace TechnsoftMotorsControl
         public bool WaitForMotionComplete(char axis)
         {
             byte axis_id = CharToId(axis);
+            if (!SelectChannel())
+                return false;
             if (!TMLLib.TS_SelectAxis(axis_id))
                 return false;
             if (!TMLLib.TS_SetEventOnMotionComplete(WAIT_EVENT, NO_STOP))
@@ -334,6 +347,8 @@ namespace TechnsoftMotorsControl
         {
             Int32 position = 0;
             byte axis_id = CharToId(axis);
+            if (!SelectChannel())
+                return false;
             if (!TMLLib.TS_SelectAxis(axis_id))
                 return -1;
             if (!TMLLib.TS_GetLongVariable("APOS", out position))
@@ -346,6 +361,8 @@ namespace TechnsoftMotorsControl
         public bool StopMotion(char axis)
         {
             byte axis_id = CharToId(axis);
+            if (!SelectChannel())
+                return false;
             if (!TMLLib.TS_SelectAxis(axis_id))
                 return -1;
             return TMLLib.TS_Stop();
