@@ -6,40 +6,57 @@ namespace TechnsoftMotorsControl
 {
   public class MotorsControl
   {
-    private double speed;
-    private double acceleration;
+    struct Motor
+    {
+      public int id;
+      public double micron_to_rot;
+      public int limit;
+    };
 
-    private const string CHANNEL_NAME = "COM8";
+    IDictionary<char, Motor> motors;
+
+    private double speed = 10;
+    private double acceleration = 0.3;
+
+
+    private byte host_id = -1;
+    private const string channel_name = "";
+
     private const uint BAUDRATE = 115200;
     private const byte CHANNEL_TYPE = TMLLib.CHANNEL_RS232;
-
     public const bool NO_STOP = false;
     public const bool NO_ADDITIVE = false;
     public const bool WAIT_EVENT = true;
 
-    private byte x_id = 1;
-    private string x_file = @"C:\MOTORS_TML\X1.t.zip";
-    private double x_micron_to_rot = 1.4648;
-    private int x_limit = 500000;
-    private byte y_id = 2;
-    private string y_file = @"C:\MOTORS_TML\Y2.t.zip";
-    private double y_micron_to_rot = 1.4648;
-    private int y_limit = 600000;
-    private byte z_id = 3;
-    private string z_file = @"C:\MOTORS_TML\Z3.t.zip";
-    private double z_micron_to_rot = 2.4446;
-    private int z_limit = 50000;
-
-    private byte host_id = 3;
-
-    const char X = 'X';
-    const char Y = 'Y';
-    const char Z = 'Z';
-
     public MotorsControl()
     {
-      speed = 10;
-      acceleration = 0.3;
+      IDictionary<char, Motor> motors = new Dictionary<char, Motor>();
+    }
+
+    public void SetChannelName(string name){
+      channel_name = name;
+    }
+
+    public void SetHostId(int id) {
+      host_id = id;
+    }
+
+    public void AddMotor(char symbol, int id, string file, double micron_to_rot, int limit) {
+      Motor motor;
+      motor.id = id;
+      motor.file = file;
+      motor.micron_to_rot = micron_to_rot;
+      motor.limit = limit;
+      motors.add(symbol, motor);
+    }
+
+    public bool Init() {
+      if (channel_name == "" || host_id == -1) {
+        return false;
+      }
+      if (motors.Count <= 0) {
+        return false;
+      }
       if (!InitCommunicationChannel())
       {
         return;
@@ -52,22 +69,18 @@ namespace TechnsoftMotorsControl
 
     public bool InitCommunicationChannel()
     {
-      return (TMLLib.TS_OpenChannel(CHANNEL_NAME, CHANNEL_TYPE, host_id, BAUDRATE) < 0) ? false : true;
+      channel = TMLLib.TS_OpenChannel(channel_name, CHANNEL_TYPE, host_id, BAUDRATE);
+      return (channel < 0) ? false : true;
     }
 
     public bool InitAxes()
     {
-      UInt16 sAxiOn_flag_01 = 0;
-      UInt16 sAxiOn_flag_02 = 0;
-      UInt16 sAxiOn_flag_03 = 0;
-
-      if (InitAxis(x_id, x_file) == -1)
-        return false;
-      if (InitAxis(y_id, y_file) == -1)
-        return false;
-      int idxSetup = InitAxis(z_id, z_file);
-      if (idxSetup == -1)
-        return false;
+      int idxSetup;
+      foreach(var motor in motors.Values) {
+        idxSetup = InitAxis(motor.id, motor.file);
+        if (idxSetup == -1)
+          return false;
+      }
 
       if (!TMLLib.TS_SetupBroadcast(idxSetup))
         return false;
@@ -78,36 +91,18 @@ namespace TechnsoftMotorsControl
       if (!TMLLib.TS_Power(TMLLib.POWER_ON))
         return false;
 
-      while ((sAxiOn_flag_01 == 0) && (sAxiOn_flag_02 == 0) && (sAxiOn_flag_03 == 0))
-      {
-        if (sAxiOn_flag_01 == 0)
+      foreach(var motor in motors.Values) {
+        UInt16 sAxiOn_flag = 0;
+        while (sAxiOn_flag == 0)
         {
-          if (!TMLLib.TS_SelectAxis(x_id))
+          if (!TMLLib.TS_SelectAxis(motor.id))
             return false;
-          if (!TMLLib.TS_ReadStatus(TMLLib.REG_SRL, out sAxiOn_flag_01))
+          if (!TMLLib.TS_ReadStatus(TMLLib.REG_SRL, out sAxiOn_flag))
             return false;
-          sAxiOn_flag_01 = (UInt16)((sAxiOn_flag_01 & 1 << 15) != 0 ? 1 : 0);
-        }
-
-        if (sAxiOn_flag_02 == 0)
-        {
-          if (!TMLLib.TS_SelectAxis(y_id))
-            return false;
-          if (!TMLLib.TS_ReadStatus(TMLLib.REG_SRL, out sAxiOn_flag_02))
-            return false;
-          sAxiOn_flag_02 = (UInt16)((sAxiOn_flag_02 & 1 << 15) != 0 ? 1 : 0);
-        }
-
-        if (sAxiOn_flag_03 == 0)
-        {
-          if (!TMLLib.TS_SelectAxis(z_id))
-            return false;
-          if (!TMLLib.TS_ReadStatus(TMLLib.REG_SRL, out sAxiOn_flag_03))
-            return false;
-          sAxiOn_flag_02 = (UInt16)((sAxiOn_flag_03 & 1 << 15) != 0 ? 1 : 0);
+          sAxiOn_flag = (UInt16)((sAxiOn_flag & 1 << 15) != 0 ? 1 : 0);
         }
       }
-      return true;
+        return true;
     }
 
     private int InitAxis(byte axis_id, string axis_file)
@@ -155,33 +150,20 @@ namespace TechnsoftMotorsControl
 
     public bool HomeAxes()
     {
-      if (!HomeAxis(z_id) || !HomeAxis(y_id) || !HomeAxis(x_id))
-      {
-        return false;
-      }
+      foreach(var motor in motors.Values) {
+        if(!HomeAxis(motor.id)) {
+          return false;
+        }
       return true;
     }
 
-    private byte CharToId(char axis)
-    {
-      switch (axis)
-      {
-        case X:
-          return x_id;
-        case Y:
-          return y_id;
-        case Z:
-          return z_id;
-      }
-      return 0;
-    }
-
-    public Point3D GetSystemPosition()
+    public Dictionary<char, int> GetSystemPosition()
     {
       Point3D pos;
-      pos.x = GetPosition('X');
-      pos.y = GetPosition('Y');
-      pos.z = GetPosition('Z');
+      Dictionary<string, int> pos = new Dictionary<char, int>;
+      foreach(var motor in motors.Keys) {
+        pos.add(motor, GetPosition(motor));
+      }
       return pos;
     }
 
@@ -189,7 +171,7 @@ namespace TechnsoftMotorsControl
     {
       if (position > GetLimit(axis) || position < 0)
         return false;
-      byte axis_id = CharToId(axis);
+      byte axis_id = motors[axis].id;
       int rot = MicronToRotation(axis, position);
       if (!TMLLib.TS_SelectAxis(axis_id))
         return false;
@@ -226,7 +208,7 @@ namespace TechnsoftMotorsControl
       double final_pos = GetPosition(axis) + (double)position;
       if (final_pos > GetLimit(axis) || final_pos < 0)
         return false;
-      byte axis_id = CharToId(axis);
+      int axis_id = motors[axis].id;
       int rot = MicronToRotation(axis, position);
       if (!TMLLib.TS_SelectAxis(axis_id))
         return false;
@@ -260,14 +242,8 @@ namespace TechnsoftMotorsControl
 
     private double AxisMicronToRot(char axis)
     {
-      switch (axis)
-      {
-        case X:
-          return x_micron_to_rot;
-        case Y:
-          return y_micron_to_rot;
-        case Z:
-          return z_micron_to_rot;
+      if (motors[axis]) {
+        return motors[axis].micron_to_rot;
       }
       return -1;
     }
@@ -284,7 +260,7 @@ namespace TechnsoftMotorsControl
 
     public bool WaitForMotionComplete(char axis)
     {
-      byte axis_id = CharToId(axis);
+      int axis_id = motors[axis].id;
       if (!TMLLib.TS_SelectAxis(axis_id))
         return false;
       if (!TMLLib.TS_SetEventOnMotionComplete(WAIT_EVENT, NO_STOP))
@@ -294,12 +270,10 @@ namespace TechnsoftMotorsControl
 
     public bool WaitForMotionComplete()
     {
-      if (!WaitForMotionComplete(X))
-        return false;
-      if (!WaitForMotionComplete(Y))
-        return false;
-      if (!WaitForMotionComplete(Z))
-        return false;
+      foreach(var motor in motors.Keys) {
+        if (!WaitForMotionComplete(motor))
+          return false;
+      }
       return true;
     }
 
@@ -315,14 +289,8 @@ namespace TechnsoftMotorsControl
 
     public int GetLimit(char axis)
     {
-      switch (axis)
-      {
-        case X:
-          return x_limit;
-        case Y:
-          return y_limit;
-        case Z:
-          return z_limit;
+      if (motors[axis]) {
+        return motors[axis].limit;
       }
       return -1;
     }
@@ -330,7 +298,7 @@ namespace TechnsoftMotorsControl
     public double GetPosition(char axis)
     {
       Int32 position = 0;
-      byte axis_id = CharToId(axis);
+      int axis_id = motors[axis].id;
       if (!TMLLib.TS_SelectAxis(axis_id))
         return -1;
       if (!TMLLib.TS_GetLongVariable("APOS", out position))
@@ -342,7 +310,7 @@ namespace TechnsoftMotorsControl
 
     public bool StopMotion(char axis)
     {
-      byte axis_id = CharToId(axis);
+      int axis_id = motors[axis].id;
       if (!TMLLib.TS_SelectAxis(axis_id))
         return -1;
       return TMLLib.TS_Stop();
@@ -350,12 +318,10 @@ namespace TechnsoftMotorsControl
 
     public bool StopMotion()
     {
-      if (!StopMotion(X))
+      foreach(var motor in motors.Keys) {
+      if (!StopMotion(motor))
         return false;
-      if (!StopMotion(Y))
-        return false;
-      if (!StopMotion(Z))
-        return false;
+      }
       return true;
     }
   }
