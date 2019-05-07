@@ -1,5 +1,4 @@
 ﻿using System;
-using Shared;
 using TML;
 
 namespace TechnsoftMotorsControl
