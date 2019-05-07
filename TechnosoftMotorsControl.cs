@@ -6,12 +6,13 @@ namespace TechnsoftMotorsControl
 {
     public class MotorsControl
     {
-        private double speed;
-        private double acceleration;
+        private double speed = 10;
+        private double acceleration = 0.3;
 
         private int channel_id = -1;
+        private byte host_id = 0;
+        private string channel_name = "";
 
-        private const string CHANNEL_NAME = "COM8";
         private const uint BAUDRATE = 115200;
         private const byte CHANNEL_TYPE = TMLLib.CHANNEL_RS232;
 
@@ -32,7 +33,6 @@ namespace TechnsoftMotorsControl
         private double z_micron_to_rot = 2.4446;
         private int z_limit = 50000;
 
-        private byte host_id = 3;
 
         const char X = 'X';
         const char Y = 'Y';
@@ -40,16 +40,34 @@ namespace TechnsoftMotorsControl
 
         public MotorsControl()
         {
-            speed = 10;
-            acceleration = 0.3;
+        }
+
+        public bool Init()
+        {
+            if (channel_name == "" || host_id == 0)
+            {
+                return false;
+            }
             if (!InitCommunicationChannel())
             {
-                return;
+                return false;
             }
             if (!InitAxes())
             {
-                return;
+                return false;
             }
+            return true;
+        }
+
+
+        public void SetChannelName(string name)
+        {
+            channel_name = name;
+        }
+
+        public void SetHostId(byte id)
+        {
+            host_id = id;
         }
 
         public bool InitCommunicationChannel()
