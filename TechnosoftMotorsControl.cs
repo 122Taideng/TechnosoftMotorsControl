@@ -9,6 +9,8 @@ namespace TechnsoftMotorsControl
         private double speed;
         private double acceleration;
 
+        private int channel_id = -1;
+
         private const string CHANNEL_NAME = "COM8";
         private const uint BAUDRATE = 115200;
         private const byte CHANNEL_TYPE = TMLLib.CHANNEL_RS232;
@@ -52,7 +54,8 @@ namespace TechnsoftMotorsControl
 
         public bool InitCommunicationChannel()
         {
-            return (TMLLib.TS_OpenChannel(CHANNEL_NAME, CHANNEL_TYPE, host_id, BAUDRATE) < 0) ? false : true;
+            channel_id = TMLLib.TS_OpenChannel(CHANNEL_NAME, CHANNEL_TYPE, host_id, BAUDRATE);
+            return (channel_id < 0) ? false : true;
         }
 
         public bool InitAxes()
