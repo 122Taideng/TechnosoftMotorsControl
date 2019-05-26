@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using TML;
 
 namespace TechnsoftMotorsControl
@@ -82,7 +83,7 @@ namespace TechnsoftMotorsControl
 
         public bool InitCommunicationChannel()
         {
-            channel_id = TMLLib.TS_OpenChannel(CHANNEL_NAME, CHANNEL_TYPE, host_id, BAUDRATE);
+            channel_id = TMLLib.TS_OpenChannel(channel_name, CHANNEL_TYPE, host_id, BAUDRATE);
             return (channel_id < 0) ? false : true;
         }
 
@@ -170,16 +171,16 @@ namespace TechnsoftMotorsControl
         public bool HomeAxes()
         {
             mutex.WaitOne();
-            if (!SelectChannel()) return -1;
+            if (!SelectChannel()) return false;
             foreach (var motor in motors.Values)
             {
                 if (!HomeAxis(motor.id))
                 {
-                    return motor.id;
+                    return false;
                 }
             }
             mutex.ReleaseMutex();
-            return 0;
+            return true;
         }
 
         public Dictionary<char, double> GetSystemPosition()
@@ -313,16 +314,7 @@ namespace TechnsoftMotorsControl
 
         public int GetLimit(char axis)
         {
-            switch (axis)
-            {
-                case X:
-                    return x_limit;
-                case Y:
-                    return y_limit;
-                case Z:
-                    return z_limit;
-            }
-            return -1;
+            return motors[axis].limit;
         }
 
         public double GetPosition(char axis)
